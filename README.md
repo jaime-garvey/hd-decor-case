@@ -1,2 +1,2 @@
-# hd_home_case
+# Case Study
 Case study [Python]
