@@ -5,10 +5,13 @@ import gensim
 from gensim.parsing.preprocessing import remove_stopwords
 
 import nltk
+from nltk.corpus import brown
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.stem.snowball import SnowballStemmer
 from sklearn.feature_extraction.text import TfidfVectorizer
+
+from textblob import TextBlob
 
 '''
 Preprocess text for products descriptions and serch queries
@@ -45,10 +48,11 @@ class TextPreprocessor:
         return df
 
 
-    def clean_text(self, df, corpus_col):
+    def clean_text(self, df, corpus_col, method):
         '''Call preprocessor generator object'''
 
         corpus = df.loc[:, corpus_col].tolist()
+        self.method=method
 
         return list(self.preprocess_text(corpus))
 
@@ -62,17 +66,54 @@ class TextPreprocessor:
         tokenized list of docs
         '''
         #docs = docs.values
-        method='lemmatizer'
-        if method == 'lemmatizer':
+
+        if self.method == 'lemmatizer':
             lemma = nltk.stem.WordNetLemmatizer()
             root = lemma.lemmatize
-        elif method == 'stemmer':
+        elif self.method == 'stemmer':
             stemmer = nltk.stem.snowball.SnowballStemmer("english")
             root = stemmer.stem
 
         for doc in docs:
+            #b=TextBlob(doc)
+            #doc = str(b.correct())
             tokens = gensim.utils.simple_preprocess(doc)
+            
             yield(' '.join([root(token) for token in tokens if not token in self.stop_words]))
+
+
+
+    def trigram_model(self, corpus_tokens, threshholds=(25,15), verbose=False):
+        '''
+        Build trigram model
+
+        Keyword Arguments:
+        ------------------
+        * corpus - list of documents (as tokens)
+        * stop_words = set of stopwords
+
+        Returns:
+        --------
+        '''
+
+        bigram = gensim.models.Phrases(corpus_tokens,
+                                        min_count=threshholds[0])
+
+        trigram = gensim.models.Phrases(bigram[corpus_tokens],
+                                        min_count=threshholds[1])
+
+        # trigram/bigram model
+        bigram_model = gensim.models.phrases.Phraser(bigram)
+        trigram_model = gensim.models.phrases.Phraser(trigram)
+
+        corpus_new = [trigram_model[bigram_model[doc]] for doc in corpus_tokens]
+
+        if verbose:
+            for doc in corpus_new[0:5]:
+                print(f'{" ".join(trigram_model[bigram_model[doc]]) } \n')
+
+        return corpus_new
+
 
     def vectorize(self, corpus, format='docs'):
 
@@ -105,5 +146,17 @@ class TextPreprocessor:
     def add_stopword(self, new_stopword):
         self.stop_words.append(new_stopword)
 
+
     def clean_docs(self, docs):
         return list(self.preprocess_text(docs))
+
+
+    def correct_spelling(self, query):
+        word_list = brown.words()
+        word_set = set(word_list)
+
+        if query not in word_set:
+            b=TextBlob(query)
+            query = str(b.correct())
+
+        return query

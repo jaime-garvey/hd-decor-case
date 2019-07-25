@@ -23,8 +23,6 @@ class Evaluator:
 
         hit_score = hits/total
 
-    def get mean_hit()
-
 
     def run(self):
         self.load_data()
