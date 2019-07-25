@@ -1,8 +1,8 @@
-# The Home Depot - Visual Navigation
+# THD - Visual Navigation
 
 Case study [Python]
 
-The goal of this case is to recommend product subcategories or attribute to customer to narrow search queries, faciliate easier navigation, and improve customer experience for HomeDepot.com. 
+The goal of this case is to recommend product subcategories or attribute to customer to narrow search queries, faciliate easier navigation, and improve customer experience for THD. 
 
 My scope ranging from further defining the scope of the problem, exploratory data analysis, and defining a benchmark model. 
 
